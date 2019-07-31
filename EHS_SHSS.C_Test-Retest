@@ -1,1 +1,397 @@
-### EHS SHSS:C Test-Retest ###
+#################################################
+### Test-Retest Reliability of EHS and SHSS:C ###
+#################################################
+
+### CONTENTS: ###
+
+# I.   Packages, set-up & demographics
+# II.  Test-retest correlation with bootstrapped 95% CIs  's
+# III. Two-way ANOVA (order x scale)
+# IV.  One-way ANOVAs for administrator effects (scales separated or pooled)
+# V.   T-test for differential pleasantness as a function of scale
+
+##########################################
+### I. Packages, set-up & descriptives ###
+##########################################
+
+##Required packages
+require(psych)        #For describe
+require(rio)          #For import_list
+require(boot)         #For boot, boot.ci
+require(dplyr)        #For shapiro.test 
+require(car)          #For residualsPlot 
+require(DescTools)    #For Scheffe.Test
+require(lmtest)       #For bptest
+require(FSA)          #For dunnTest
+require(MASS)         #For mvrnorm
+
+##Make workspace nice and tidy
+rm(list=ls())
+setwd("C:/ExcercisesforR")
+### Load data
+
+##Set WD path to the directory containing Test_Retest.xlsx
+setwd("C:/ExcercisesforR/")
+
+##Import all 4 worksheets
+Worksheets <- import_list("Test-retest_FINAL.xlsx")
+
+#
+nEHS <-  nrow(Worksheets$EHS)
+nSHSS <- nrow(Worksheets$SHSS)
+
+##Separate the worksheets
+EHS_Data <- (Worksheets$EHS[4:nEHS,])   
+SHSS_Data <- (Worksheets$SHSS[4:nSHSS,])     
+EHS_Data <- subset(EHS_Data, EHS_Data$EHS_total_score_session2!="NA")
+SHSS_Data <- subset(SHSS_Data, SHSS_Data$SHSS_total_score_session2!="NA")
+
+
+##Demographics
+
+    summary.function <- function(x) {
+      cbind(freq = table(x), 
+            percentage = round(prop.table(table(x))*100, 2))
+    }
+    
+
+      
+##Age
+age_Both <- as.numeric(c(EHS_Data$Age, SHSS_Data$Age))
+
+
+describe(as.numeric(EHS_Data$Age))
+describe(as.numeric(SHSS_Data$Age))
+describe(age_Both)
+t.test(as.numeric(EHS_Data$Age), as.numeric(SHSS_Data$Age))
+
+##Gender
+gender_Both <- as.factor(c(EHS_Data$Gender, SHSS_Data$Gender))
+
+
+summary.function(as.factor(EHS_Data$Gender))
+summary.function(as.factor(SHSS_Data$Gender))
+summary.function(gender_Both)
+
+
+observed.gender=c(38, 13)
+expected.gender=c(0.71, 0.29)
+
+
+chisq.test(x=observed.gender, p=expected.gender)
+ 
+ ##Ethnicity
+ethnicity_Both <- as.factor(c(EHS_Data$Race, SHSS_Data$Race))
+
+
+summary.function(as.factor(EHS_Data$Race))
+summary.function(as.factor(SHSS_Data$Race))
+summary.function(ethnicity_Both)
+
+
+observed.eth=c(3,9,0,0,1,1,1,36)
+expected.eth=c(7,16,1,1,1,1,1,70)
+
+expected.eth=(expected.eth/98)
+chisq.test(x=observed.eth, p=expected.eth)
+
+##Years in college
+college_Both <- as.factor(c(EHS_Data$University_classification, SHSS_Data$University_classification))
+
+
+summary.function(as.factor(EHS_Data$University_classification))
+summary.function(as.factor(SHSS_Data$University_classification))
+summary.function(college_Both)
+
+##Marital status
+marital_status_Both <- as.factor(c(EHS_Data$Marital_status, SHSS_Data$Marital_status))
+
+summary.function(as.factor(EHS_Data$Marital_status))
+summary.function(as.factor(SHSS_Data$Marital_status))
+summary.function(marital_status_Both)
+
+###################################
+### II. Test-Retest Correlation ###
+###################################
+
+##First we deal with the EHS
+
+##Specify predictor and criterion
+EHS_total1=as.numeric(EHS_Data$EHS_total_score_session1)
+EHS_total2=as.numeric(EHS_Data$EHS_total_score_session2)
+
+describe(na.omit(EHS_total1))
+describe(na.omit(EHS_total2))
+
+
+##Inspect visually
+plot(x=EHS_total1, y=EHS_total2, main="EHS Scores",     
+     xlab="Session 1", ylab="Session 2", pch=19)       # Inspect dataframe visually 
+abline(lm(EHS_total1 ~ EHS_total2))             # Add line of best fit to plot
+
+##Create lm object for assumptions testing
+EHS_autocorr <- lm(EHS_total1 ~ EHS_total2)
+
+##Plot residuals
+residualPlots(lm(EHS_total1~EHS_total2))  
+
+##Test variable association for heteroscedasticity
+bptest(EHS_autocorr)  
+
+## Inspect distribution
+hist(EHS_total1)
+hist(EHS_total2)
+
+qqnorm(EHS_total1, pch = 1, frame = FALSE)
+qqline(EHS_total1, col = "steelblue", lwd = 2)
+
+qqnorm(EHS_total2, pch = 1, frame = FALSE)
+qqline(EHS_total2, col = "steelblue", lwd = 2)
+
+##Extract correlation coefficient 
+cor_EHS <- cor(EHS_total1, EHS_total2, use = "pairwise.complete.obs", 
+    method = "pearson")  
+
+##Change correlation method to 'spearman' if GLM assumptions are violated
+
+##Bootstrap a 95%CI for the pearson correlation coeffient
+xy <- na.omit(data.frame(cbind(EHS_total1,EHS_total2)))
+n = nrow(xy)
+Brep = 10000
+
+
+pearson <- function(d,i=c(1:n)){
+  d2 <- d[i,]
+  return(cor(d2$EHS_total1,d2$EHS_total2))
+}
+bootcorr <- boot(data=xy,statistic=pearson,R=Brep) 
+bootcorr  
+boot.ci(bootcorr,conf=.95)
+
+##Inspect bootstrapped EHS pearson correlation output visually
+windows()
+par(mfrow=c(2,1))
+hist(bootcorr$t,main="Bootstrapped EHS Test-Retest Pearson Correlation")
+plot(ecdf(bootcorr$t),main="ECDF of EHS Test-Retest Pearson Correlation")
+
+
+##Bootstrap spearman correlation for EHS
+xy <- na.omit(data.frame(cbind(EHS_total1,EHS_total2)))
+n = nrow(xy)
+Brep = 10000
+
+ spearman <- function(d,i=c(1:n)){
+  d2 <- d[i,]
+  return(cor(d2$EHS_total1,d2$EHS_total2, method="spearman"))
+}
+bootcorr <- boot(data=xy,statistic=spearman,R=Brep, stype="i") 
+bootcorr  
+boot.ci(bootcorr,conf=.95)
+
+##Inspect bootstrapped EHS spearman correlation output visually
+windows()
+par(mfrow=c(2,1))
+hist(bootcorr$t,main="Bootstrapped EHS Test-Retest Spearman Correlation")
+plot(ecdf(bootcorr$t),main="ECDF of EHS Test-Retest Spearman Correlation")
+
+
+
+##Now we repeat the process for the SHSS:C
+
+##Specify predictor and criterion
+SHSS_total1=as.numeric(SHSS_Data$SHSS_total_score_session1)
+SHSS_total2=as.numeric(SHSS_Data$SHSS_total_score_session2)
+
+
+describe(na.omit(SHSS_total1))
+describe(na.omit(SHSS_total2))
+
+##Inspect visually
+plot(x=SHSS_total1, y=SHSS_total2, main="SHSS Scores",     
+     xlab="Session 1", ylab="Session 2", pch=19)       # Inspect dataframe visually 
+abline(lm(SHSS_total1 ~ SHSS_total2))             # Add line of best fit to plot
+
+##Create lm object for assumptions testing
+SHSS_autocorr <- lm(SHSS_total1 ~ SHSS_total2)
+
+##Plot residuals
+residualPlots(lm(SHSS_total1~SHSS_total2))  
+
+##Test variable association for heteroscedasticity
+bptest(SHSS_autocorr)  
+
+## Inspect distribution
+hist(SHSS_total1)
+hist(SHSS_total2)
+
+qqnorm(SHSS_total1, pch = 1, frame = FALSE)
+qqline(SHSS_total1, col = "steelblue", lwd = 2)
+
+qqnorm(SHSS_total2, pch = 1, frame = FALSE)
+qqline(SHSS_total2, col = "steelblue", lwd = 2)
+
+##Extract correlation coefficient 
+cor(SHSS_total1, SHSS_total2, use = "pairwise.complete.obs", 
+    method = "pearson")  
+
+##Change correlation method to 'spearman' if GLM assumptions are violated
+
+##Bootstrap a 95%CI for the pearson correlation coeffient
+xy <- na.omit(data.frame(cbind(SHSS_total1,SHSS_total2)))
+n = nrow(xy)
+Brep = 10000
+
+
+pearson <- function(d,i=c(1:n)){
+  d2 <- d[i,]
+  return(cor(d2$SHSS_total1,d2$SHSS_total2))
+}
+bootcorr <- boot(data=xy,statistic=pearson,R=Brep) 
+bootcorr  
+boot.ci(bootcorr,conf=.95)
+
+##Inspect bootstrapped SHSS pearson correlation output visually
+windows()
+par(mfrow=c(2,1))
+hist(bootcorr$t,main="Bootstrapped SHSS Test-Retest Pearson Correlation")
+plot(ecdf(bootcorr$t),main="ECDF of SHSS Test-Retest Pearson Correlation")
+
+
+##Bootstrap spearman correlation for SHSS
+xy <- na.omit(data.frame(cbind(SHSS_total1,SHSS_total2)))
+n = nrow(xy)
+Brep = 10000
+
+spearman <- function(d,i=c(1:n)){
+  d2 <- d[i,]
+  return(cor(d2$SHSS_total1,d2$SHSS_total2, method="spearman"))
+}
+bootcorr <- boot(data=xy,statistic=spearman,R=Brep, stype="i") 
+bootcorr  
+boot.ci(bootcorr,conf=.95)
+
+##Inspect bootstrapped SHSS spearman correlation output visually
+windows()
+par(mfrow=c(2,1))
+hist(bootcorr$t,main="Bootstrapped SHSS Test-Retest Spearman Correlation")
+plot(ecdf(bootcorr$t),main="ECDF of SHSS Test-Retest Spearman Correlation")
+
+
+############################################
+### III. hypothesis test - time effect   ###
+############################################
+
+## EHS
+if(EHS_total1=EHS_total2){
+  print("Same)}")
+
+if(EHS_total1)
+
+# inspect distribution
+EHS_total_difference = EHS_total1 -EHS_total2
+hist(EHS_total_difference, main="EHS_total_difference", xlab="Plesantness", 
+     border="blue", col="green")
+qqnorm(EHS_total_difference, pch = 1, frame = FALSE)
+qqline(EHS_total_difference, col = "steelblue", lwd = 2)
+
+# t-test
+t.test(EHS_total1, EHS_total2, paired = T)
+
+# change t-test to Mann-Whitney-Wilcoxon tests if t-test assumptions are violated
+wilcox.test(EHS_total1, EHS_total2, paired = T, alternative = "two.sided")
+
+mean(EHS_total1)
+mean(EHS_total2)
+
+## SHSS
+
+# inspect distribution
+SHSS_total_difference = SHSS_total1 -SHSS_total2
+hist(SHSS_total_difference, main="SHSS_total_difference", xlab="Plesantness", 
+     border="blue", col="green")
+qqnorm(SHSS_total_difference, pch = 1, frame = FALSE)
+qqline(SHSS_total_difference, col = "steelblue", lwd = 2)
+
+# t-test
+t.object <- t.test(SHSS_total1, SHSS_total2, paired = T)
+
+# change t-test to Wilcoxon signed rank test if t-test assumptions are violated
+wilcox.test(SHSS_total1, SHSS_total2, paired = T, alternative = "two.sided")
+
+
+############################################
+### IV. hypothesis test - scale effect   ###
+############################################
+
+# aggregate session 1 and 2 hyponotizability scores
+EHS_mean = as.numeric(EHS_Data$EHS_total_score_session1) + as.numeric(EHS_Data$EHS_total_score_session2)
+EHS_mean = EHS_mean/2
+SHSS_mean = as.numeric(SHSS_Data$SHSS_total_score_session1) + as.numeric(SHSS_Data$SHSS_total_score_session2)
+SHSS_mean = SHSS_mean/2
+
+mean(EHS_mean) - mean(SHSS_mean)
+# inspect distribution
+hist(EHS_mean, main="EHS_mean", xlab="Total score", 
+     border="blue", col="green")
+qqnorm(EHS_mean, pch = 1, frame = FALSE)
+qqline(EHS_mean, col = "steelblue", lwd = 2)
+
+hist(SHSS_mean, main="SHSS_mean", xlab="Total score", 
+     border="blue", col="green")
+qqnorm(SHSS_mean, pch = 1, frame = FALSE)
+qqline(SHSS_mean, col = "steelblue", lwd = 2)
+
+##Inspect and test for heterogeneity of variance
+var(na.omit(SHSS_mean))
+var(na.omit(EHS_mean))
+var.test(SHSS_mean, EHS_mean)
+
+# t-test
+t.test(SHSS_mean, EHS_mean,
+       alternative = "two.sided", paired=FALSE, var.equal = TRUE) 
+##Change var.equal to FALSE if var.test is significant
+
+# change t-test to Mann-Whitney-Wilcoxon tests if t-test assumptions are violated
+wilcox.test(SHSS_mean, EHS_mean, paired = F, alternative = "two.sided")
+
+
+####################################################################
+### V. Differential Pleasantness Ratings as a Function of Scale ###
+####################################################################
+
+##Pool pleasantness ratings from both sessions
+EHS_pleasantness = as.numeric(EHS_Data$EHS_Pleasantness_1_overall_session1) + as.numeric(EHS_Data$EHS_Pleasantness_1_overall_session2)
+EHS_pleasantness = EHS_pleasantness/2
+SHSS_pleasantness = as.numeric(SHSS_Data$SHSS_Pleasantness_1_overall_session1) + as.numeric(SHSS_Data$SHSS_Pleasantness_1_overall_session2)
+SHSS_pleasantness = SHSS_pleasantness/2
+
+                        
+##Inspect EHS pleasantness distribution
+hist(EHS_pleasantness, main="EHS Pleasantness", xlab="Plesantness", 
+     border="blue", col="green")
+qqnorm(EHS_pleasantness, pch = 1, frame = FALSE)
+qqline(EHS_pleasantness, col = "steelblue", lwd = 2)
+
+##Inspect SHSS pleasantness distribution                  
+hist(SHSS_pleasantness, main="SHSS Pleasantness", xlab="Plesantness", 
+     border="blue", col="green")
+qqnorm(SHSS_pleasantness, pch = 1, frame = FALSE)
+qqline(SHSS_pleasantness, col = "steelblue", lwd = 2)
+
+##Inspect and test for heterogeneity of variance
+var(na.omit(EHS_pleasantness))
+var(na.omit(SHSS_pleasantness))
+var.test(EHS_pleasantness, SHSS_pleasantness)
+                      
+##Students t-test for pleasantness ratings
+t.test(EHS_pleasantness, SHSS_pleasantness,
+alternative = "two.sided", paired=FALSE, var.equal = TRUE) 
+##Change var.equal to FALSE if var.test is significant
+
+##Utilize Mann-Whitney-Wilcoxon test if GLM assumptions are violated
+wilcox.test(EHS_pleasantness, SHSS_pleasantness, paired = F, alternative = "two.sided")
+
+##Effect sizes
+
+
+
