@@ -18,12 +18,10 @@
 require(psych)        #For describe
 require(rio)          #For import_list
 require(boot)         #For boot, boot.ci
-require(dplyr)        #For shapiro.test 
+require(dplyr)        #For shapiro.test
 require(car)          #For residualsPlot 
-require(DescTools)    #For Scheffe.Test
 require(lmtest)       #For bptest
-require(FSA)          #For dunnTest
-require(MASS)         #For mvrnorm
+require(effsize)      #For cohen.d
 
 ##Make workspace nice and tidy
 rm(list=ls())
