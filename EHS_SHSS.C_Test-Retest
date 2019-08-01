@@ -6,9 +6,9 @@
 
 # I.   Packages, set-up & demographics
 # II.  Test-retest correlation with bootstrapped 95% CIs  's
-# III. T-test reassessment t-test
-# IV.  T-test for scale equivalence
-# V.   Pleasantness Ratings bw/ groups equivalence test
+# III. T-test for reassessment effect
+# IV.  T-test for equivalent responsiveness
+# V.   T-test for equivalent pleasantness
 
 ##########################################
 ### I. Packages, set-up & descriptives ###
