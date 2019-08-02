@@ -6,9 +6,9 @@
 
 # I.   Packages, set-up & demographics
 # II.  Test-retest correlation with bootstrapped 95% CIs  's
-# III. T-test for reassessment effect
-# IV.  T-test for equivalent responsiveness
-# V.   T-test for equivalent pleasantness
+# III. T-test reassessment t-test
+# IV.  T-test for scale equivalence
+# V.   Pleasantness Ratings bw/ groups equivalence test
 
 ##########################################
 ### I. Packages, set-up & descriptives ###
@@ -161,12 +161,6 @@ summary.function(as.factor(EHS_Data$Gender))
 summary.function(as.factor(SHSS_Data$Gender))
 summary.function(gender_Both)
 
-
-observed.gender=c(38, 13)
-expected.gender=c(0.7143, 0.2857)
-
-
-chisq.test(x=observed.gender, p=expected.gender)
  
  ##Ethnicity
 ethnicity_Both <- as.factor(c(EHS_Data$Race, SHSS_Data$Race))
@@ -177,11 +171,6 @@ summary.function(as.factor(SHSS_Data$Race))
 summary.function(ethnicity_Both)
 
 
-observed.eth=c(3,9,0,0,1,1,1,36)
-expected.eth=c(7,16,1,1,1,1,1,70)
-
-expected.eth=(expected.eth/98)
-chisq.test(x=observed.eth, p=expected.eth)
 
 ##Years in college
 college_Both <- as.factor(c(EHS_Data$University_classification, SHSS_Data$University_classification))
@@ -198,17 +187,6 @@ summary.function(as.factor(EHS_Data$Marital_status))
 summary.function(as.factor(SHSS_Data$Marital_status))
 summary.function(marital_status_Both)
 
-##Attrition
-o1=0.17741935483
-o2=0.07843137254
-
-e1=0.875
-e2=0.875
-
-observed.att=c(o1,o2)
-expected.att=c(e1,e2)
-
-chisq.test(x=observed.att, p=expected.att)
 ###################################
 ### II. Test-Retest Correlation ###
 ###################################
@@ -516,5 +494,3 @@ wilcox.test(EHS_pleasantness, SHSS_pleasantness, paired = F, alternative = "two.
 
 cohen.d(EHS_pleasantness, SHSS_pleasantness, pooled=TRUE, paired=FALSE, na.rm=FALSE, 
         hedges.correction = TRUE, conf.level = 0.95, noncentral = FALSE)
-
-
