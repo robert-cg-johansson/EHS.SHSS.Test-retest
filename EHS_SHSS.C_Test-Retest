@@ -380,7 +380,7 @@ t.test(EHS_total1, EHS_total2, paired = T)
 wilcox.test(EHS_total1, EHS_total2, paired = T, alternative = "two.sided", conf.int = TRUE, conf.level=.95)
 
 
-##Effect size hedges g (rm)
+##Bootstrap effect size hedges g (rm)
 
 n12=length(EHS_total1) + length (EHS_total2)
 r <- cor(EHS_total1, EHS_total2, method="spearman")
@@ -459,8 +459,20 @@ t.test(SHSS_mean, EHS_mean,
 # change t-test to Mann-Whitney-Wilcoxon tests if t-test assumptions are violated
 wilcox.test(SHSS_mean, EHS_mean, paired = F, alternative = "two.sided")
 
+##Bootstrap CI for equivalence test (not working properly)
+xy <- na.omit(data.frame(cbind(SHSS_mean,EHS_mean)))
+n = nrow(xy)
+Brep = 10000
 
-## Bootstrap hedges g
+wilcox <- function(d,i=c(1:n)){
+  d2 <- d[i,]
+  return(wilcox.test(d2$SHSS_mean, d2$EHS_mean, paired = F, alternative = "two.sided"))
+}
+bootdiff <- boot(data=xy,statistic=wilcox,R=Brep, stype="i") 
+bootdiff  
+boot.ci(bootdiff,conf=.95)
+
+## Bootstrap standardized effect size
 n1=length(SHSS_mean)
 n2=length(EHS_mean)
 means <- c(SHSS_mean, EHS_mean)
@@ -515,7 +527,21 @@ alternative = "two.sided", paired=FALSE, var.equal = TRUE)
 ##Utilize Mann-Whitney-Wilcoxon test if GLM assumptions are violated
 wilcox.test(EHS_pleasantness, SHSS_pleasantness, paired = F, alternative = "two.sided")
 
-##Bootstrap heedges g
+##Bootstrap CI for equivalence test
+xy <- na.omit(data.frame(cbind(SHSS_pleasantness,EHS_pleasantness)))
+n = nrow(xy)
+Brep = 10000
+
+wilcox <- function(d,i=c(1:n)){
+  d2 <- d[i,]
+  return(wilcox.test(d2$SHSS_pleasantness, d2$EHS_pleasantness, paired = F, alternative = "one.sided"))
+}
+bootdiff <- boot(data=xy,statistic=wilcox,R=Brep, stype="i") 
+bootdiff  
+boot.ci(bootdiff,conf=.95)
+
+
+##Bootstrap standardized effect size
 
 n1=length(SHSS_pleasantness)
 n2=length(EHS_pleasantness)
@@ -528,3 +554,8 @@ data_means <- data.frame(means, levels)
 
 bootES(data_means, R=10000, data.col="means", group.col="levels", 
        effect.type = "hedges.g", contrast=c(SHSS=1, EHS=-1))
+
+##Bootstrap unstandardized CIs
+bootES(data_means, R=10000, data.col="means", group.col="levels", 
+       effect.type = "cohens.d.sigma", contrast=c(SHSS=1, EHS=-1), ci.type = "norm")
+
