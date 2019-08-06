@@ -18,6 +18,7 @@
 require(psych)        #For describe
 require(rio)          #For import_list
 require(boot)         #For boot, boot.ci
+require(bootES)       #For cohen.d
 require(dplyr)        #For shapiro.test 
 require(car)          #For residualsPlot 
 require(lmtest)       #For bptest
@@ -142,8 +143,6 @@ SHSS_Data <- subset(SHSS_Data, SHSS_Data$SHSS_total_score_session2!="NA")
             percentage = round(prop.table(table(x))*100, 2))
     }
     
-
-      
 ##Age
 age_Both <- as.numeric(c(EHS_Data$Age, SHSS_Data$Age))
 
@@ -151,6 +150,7 @@ age_Both <- as.numeric(c(EHS_Data$Age, SHSS_Data$Age))
 describe(as.numeric(EHS_Data$Age))
 describe(as.numeric(SHSS_Data$Age))
 describe(age_Both)
+
 t.test(as.numeric(EHS_Data$Age), as.numeric(SHSS_Data$Age))
 
 ##Gender
@@ -161,6 +161,14 @@ summary.function(as.factor(EHS_Data$Gender))
 summary.function(as.factor(SHSS_Data$Gender))
 summary.function(gender_Both)
 
+##Chisquare gender
+
+gender = matrix( 
+  c(38, 13, 32, 15), #Input observed frequencies of males and females
+  nrow=2, 
+  ncol=2) 
+
+chisq.test(gender)
  
  ##Ethnicity
 ethnicity_Both <- as.factor(c(EHS_Data$Race, SHSS_Data$Race))
@@ -186,6 +194,74 @@ marital_status_Both <- as.factor(c(EHS_Data$Marital_status, SHSS_Data$Marital_st
 summary.function(as.factor(EHS_Data$Marital_status))
 summary.function(as.factor(SHSS_Data$Marital_status))
 summary.function(marital_status_Both)
+
+##Attrition
+
+attrition = matrix( 
+  c(47, 3, 51, 11), #Input observed frequencies of adherence and dropout
+  nrow=2, 
+  ncol=2) 
+
+chisq.test(attrition)
+
+##ADHD
+summary.function(as.factor(EHS_Data$ADHD))
+summary.function(as.factor(SHSS_Data$ADHD))
+
+adhd = matrix(
+  c(42, 9, 44, 3),
+  nrow=2,
+  ncol=2
+)
+
+chisq.test(adhd)
+
+#prehyp relaxation
+ehs.relax <- c( (as.numeric(EHS_Data$Prehyp_relaxation_session1) + 
+                   as.numeric(EHS_Data$Prehyp_relaxation_session2)) /2)
+
+shss.relax <- c( (as.numeric(SHSS_Data$Prehyp_relaxation_session1) + 
+                    as.numeric(SHSS_Data$Prehyp_relaxation_session2)) /2)
+
+t.test(ehs.relax, shss.relax)
+
+mean(ehs.relax)
+sd(ehs.relax)
+
+mean(shss.relax)
+sd(shss.relax)
+
+#prehyp absorption
+ehs.absorbtion <- c( (as.numeric(EHS_Data$Prehyp_absorbtion_session1) + 
+                        as.numeric(EHS_Data$Prehyp_absorbtion_session2)) /2 )
+
+mean(ehs.absorbtion)
+sd(ehs.absorbtion)
+
+shss.absorbtion <- c( (as.numeric(SHSS_Data$Prehyp_absorbtion_session1) + 
+                         as.numeric(SHSS_Data$Prehyp_absorbtion_session2)) /2)
+
+mean(shss.absorbtion)
+sd(shss.absorbtion)
+
+
+t.test(ehs.absorbtion, shss.absorbtion)
+
+#posthyp relaxation
+ehs.relax <- c( (as.numeric(EHS_Data$Posthyp_relaxation_session1) + 
+                   as.numeric(EHS_Data$Posthyp_relaxation_session2)) /2)
+
+shss.relax <- c( (as.numeric(SHSS_Data$Posthyp_relaxation_session1) + 
+                    as.numeric(SHSS_Data$Posthyp_relaxation_session2)) /2)
+shss.relax <- subset(shss.absorbtion, shss.relax!="NA")
+
+
+mean(ehs.relax)
+sd(ehs.relax)
+mean(shss.relax)
+sd(shss.relax)
+
+t.test(ehs.relax, shss.relax)
 
 ###################################
 ### II. Test-Retest Correlation ###
@@ -440,6 +516,9 @@ SHSS_mean = SHSS_mean/2
 
 mean(EHS_mean) - mean(SHSS_mean)
 
+sd(EHS_mean)
+sd(SHSS_mean)
+
 shapiro.test(EHS_mean)
 shapiro.test(SHSS_mean)
 # inspect distribution
@@ -464,7 +543,7 @@ t.test(SHSS_mean, EHS_mean,
 ##Change var.equal to FALSE if var.test is significant
 
 # change t-test to Mann-Whitney-Wilcoxon tests if t-test assumptions are violated
-wilcox.test(SHSS_mean, EHS_mean, paired = F, alternative = "two.sided")
+wilcox.test(SHSS_mean, EHS_mean, paired = F, alternative = "two.sided", conf.int = TRUE)
 
 ## Bootstrap standardized effect size
 n1=length(SHSS_mean)
@@ -494,8 +573,7 @@ EHS_pleasantness = EHS_pleasantness/2
 SHSS_pleasantness = as.numeric(SHSS_Data$SHSS_Pleasantness_1_overall_session1) + as.numeric(SHSS_Data$SHSS_Pleasantness_1_overall_session2)
 SHSS_pleasantness = SHSS_pleasantness/2
 
-mean(EHS_pleasantness)
-mean(SHSS_pleasantness)
+mean(EHS_pleasantness) - mean(SHSS_pleasantness)
                         
 ##Inspect EHS pleasantness distribution
 hist(EHS_pleasantness, main="EHS Pleasantness", xlab="Plesantness", 
