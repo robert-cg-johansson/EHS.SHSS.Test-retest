@@ -26,13 +26,11 @@ require(effsize)      #For cohen.d
 
 ##Make workspace nice and tidy
 rm(list=ls())
-setwd("C:/ExcercisesforR")
+
 ### Load data
 
-
 ############## If actual data is available
-##Set WD path to the directory containing Test_Retest.xlsx
-setwd("C:/ExcercisesforR/")
+setwd("C:/MyWorkingDirectory/")                ##Set WD path to the directory containing Test_Retest.xlsx
 
 ##Import all 4 worksheets
 Worksheets <- import_list("Test-retest_FINAL.xlsx")
