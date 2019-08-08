@@ -187,23 +187,12 @@ summary.function(marital_status_Both)
 ##Attrition
 
 attrition = matrix( 
-  c(47, 3, 51, 11), #Input observed frequencies of adherence and dropout
+  c(47, 4, 51, 10), #Input observed frequencies of adherence and dropout
   nrow=2, 
   ncol=2) 
 
 chisq.test(attrition)
 
-##ADHD
-summary.function(as.factor(EHS_Data$ADHD))
-summary.function(as.factor(SHSS_Data$ADHD))
-
-adhd = matrix(
-  c(42, 9, 44, 3),
-  nrow=2,
-  ncol=2
-)
-
-chisq.test(adhd)
 
 ###################################
 ### II. Test-Retest Correlation ###
