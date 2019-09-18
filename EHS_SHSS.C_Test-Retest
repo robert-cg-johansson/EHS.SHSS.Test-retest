@@ -567,11 +567,37 @@ bootES(data_means, R=10000, data.col="means", group.col="levels",
 ### VI.  Test-retest difference graph  ###
 ##########################################
 
-# We create dataset "t2_minus_t1" first, with 15 rows and 
+### To begin with, we create a dataset "t2_minus_t1", with 15 rows and 
 # 3 columns: 
 # Scale (either "ehs" or "shssc"), 
 # Retest.score.minus.test.score (-7, -6, ... 0, 1, ...7),
 # Frequency (%)
+
+### Let's start by calculating Frequency
+
+##Retest scores minus test scores
+EHS_t2_minus_t1 = EHS_total2 -EHS_total1
+SHSS_t2_minus_t1 = SHSS_total2 -SHSS_total1
+
+##t2_minus_t1 scores frequency
+EHS_t2_minus_t1_f <- table(EHS_t2_minus_t1)
+SHSS_t2_minus_t1_f <- table(SHSS_t2_minus_t1)
+
+##t2_minus_t1 scores frequency expressed in percentages (whole numbers only)
+EHS_t2_minus_t1_p <- round(EHS_t2_minus_t1_f/51*100)
+SHSS_t2_minus_t1_p <- round(SHSS_t2_minus_t1_f/47*100)
+
+### Then we can put together the actual dataset
+
+##Preparing the dataset 1: Making the vectors
+Scale <- c("EHS","EHS","EHS", "EHS","EHS","EHS","EHS","EHS","EHS","EHS","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C")
+Retest.score.minus.test.score <- c(-6,-4,-3,-2,-1,0,1,2,3,4,-7,-6,-4,-3,-2,-1,0,1,2,3)
+Frequency <- c(EHS_t2_minus_t1_p, SHSS_t2_minus_t1_p)
+
+##Preparing the dataset 2: Assambling the dataset from the created vectors
+t2_minus_t1 <- data.frame(Scale, Retest.score.minus.test.score, Frequency)
+
+### Now that the dataset is ready, we can finally move on to the graph
 
 # Test-retest difference graph
 ggplot(t2_minus_t1, aes(t2_minus_t1$Retest.score.minus.test.score, t2_minus_t1$Frequency)) +
