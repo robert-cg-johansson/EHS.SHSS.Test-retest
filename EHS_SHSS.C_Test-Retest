@@ -593,9 +593,11 @@ SHSS_t2_minus_t1_p <- round(SHSS_t2_minus_t1_f/47*100)
 Scale <- c("EHS","EHS","EHS", "EHS","EHS","EHS","EHS","EHS","EHS","EHS","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C","SHSS:C")
 Retest.score.minus.test.score <- c(-6,-4,-3,-2,-1,0,1,2,3,4,-7,-6,-4,-3,-2,-1,0,1,2,3)
 Frequency <- c(EHS_t2_minus_t1_p, SHSS_t2_minus_t1_p)
+lower <- c(-0.90,-0.90,-0.90,-0.90,-0.90,-0.90,-0.90,-0.90,-0.90,-0.90,-1.46,-1.46,-1.46,-1.46,-1.46,-1.46,-1.46,-1.46,-1.46,-1.46)
+upper <- c(0.07,0.07,0.07,0.07,0.07,0.07,0.07,0.07,0.07,0.07,-0.36,-0.36,-0.36,-0.36,-0.36,-0.36,-0.36,-0.36,-0.36,-0.36)
 
 ##Preparing the dataset 2: Assambling the dataset from the created vectors
-t2_minus_t1 <- data.frame(Scale, Retest.score.minus.test.score, Frequency)
+t2_minus_t1 <- data.frame(Scale, Retest.score.minus.test.score, Frequency, lower, upper)
 
 ### Now that the dataset is ready, we can finally move on to the graph
 
@@ -603,6 +605,9 @@ t2_minus_t1 <- data.frame(Scale, Retest.score.minus.test.score, Frequency)
 ggplot(t2_minus_t1, aes(t2_minus_t1$Retest.score.minus.test.score, t2_minus_t1$Frequency)) +
   geom_bar(stat = "identity") + 
   facet_grid(. ~ t2_minus_t1$Scale) +
+  geom_segment(x=lower , y=-1, xend=upper , yend=-1, size=0.5) +
+  geom_segment(x=lower , y=-0.5, xend=lower , yend=-1.5, size=0.5) +
+  geom_segment(x=upper , y=-0.5, xend=upper , yend=-1.5, size=0.5) +
   scale_x_continuous (breaks = seq(-7, 7, by = 1)) +
   scale_y_continuous (breaks = seq(0, 40, by = 5)) +
   xlab("Retest score minus test score") +
